@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Asset Exchange</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Asset Exchange</h1>
+
+        <div class="order-form">
+            <label>User:</label>
+            <input type="text" id="userInput" placeholder="Enter username">
+
+            <label>Quantity:</label>
+            <input type="number" id="quantityInput" placeholder="Enter quantity">
+
+            <label>Price:</label>
+            <input type="number" id="priceInput" placeholder="Enter price">
+
+            <button onclick="exchange.placeBuyOrder()">Place Buy Order</button>
+            <button onclick="exchange.placeSellOrder()">Place Sell Order</button>
+        </div>
+
+        <div class="matched-orders">
+            <h2>Orders</h2>
+            <ul id="matchedOrdersList"></ul>
+            <p id="errorMessage"></p>
+        </div>
+    </div>
+
+    <script>
+        class Order {
+            constructor(user, quantity, price) {
+                this.user = user;
+                this.quantity = quantity;
+                this.price = price;
+            }
+        }
+
+        class AssetExchange {
+            constructor() {
+                this.buyOrders = [];
+                this.sellOrders = [];
+            }
+
+            placeBuyOrder() {
+                const user = document.getElementById('userInput').value;
+                const quantity = parseInt(document.getElementById('quantityInput').value, 10);
+                const price = parseFloat(document.getElementById('priceInput').value);
+
+                if (user && !isNaN(quantity) && !isNaN(price)) {
+                    const buyOrder = new Order(user, quantity, price);
+                    this.buyOrders.push(buyOrder);
+                    this.matchOrders();
+                    updateMatchesList();
+                    document.getElementById('errorMessage').textContent = '';
+                    document.getElementById('quantityInput').value = '';
+                    document.getElementById('priceInput').value = '';
+                    displayMessage('success', 'Buy order placed successfully!');
+                } else {
+                    displayMessage('error', 'Invalid input. Please fill all fields with valid values.');
+                }
+            }
+
+            placeSellOrder() {
+                const user = document.getElementById('userInput').value;
+                const quantity = parseInt(document.getElementById('quantityInput').value, 10);
+                const price = parseFloat(document.getElementById('priceInput').value);
+
+                if (user && !isNaN(quantity) && !isNaN(price)) {
+                    const sellOrder = new Order(user, quantity, price);
+                    this.sellOrders.push(sellOrder);
+                    this.matchOrders();
+                    updateMatchesList();
+                    document.getElementById('errorMessage').textContent = '';
+                    document.getElementById('quantityInput').value = '';
+                    document.getElementById('priceInput').value = '';
+                    displayMessage('success', 'Sell order placed successfully!');
+                } else {
+                    displayMessage('error', 'Invalid input. Please fill all fields with valid values.');
+                }
+            }
+
+            matchOrders() {
+                for (const buyOrder of this.buyOrders) {
+                    for (const sellOrder of this.sellOrders) {
+                        if (buyOrder.price >= sellOrder.price) {
+                            const matchedQuantity = Math.min(buyOrder.quantity, sellOrder.quantity);
+
+                            console.log(`Matched order - Buy Order: ${buyOrder.user} Quantity: ${matchedQuantity} Price: ${buyOrder.price} with Sell Order: ${sellOrder.user}`);
+
+                            buyOrder.quantity -= matchedQuantity;
+                            sellOrder.quantity -= matchedQuantity;
+
+                            if (buyOrder.quantity === 0) {
+                                this.buyOrders.splice(this.buyOrders.indexOf(buyOrder), 1);
+                            }
+
+                            if (sellOrder.quantity === 0) {
+                                this.sellOrders.splice(this.sellOrders.indexOf(sellOrder), 1);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        const exchange = new AssetExchange();
+
+        function updateMatchesList() {
+            const matchesList = document.getElementById('matchedOrdersList');
+            matchesList.innerHTML = '';
+
+            for (const buyOrder of exchange.buyOrders) {
+                for (const sellOrder of exchange.sellOrders) {
+                    if (buyOrder.price >= sellOrder.price) {
+                        const matchedQuantity = Math.min(buyOrder.quantity, sellOrder.quantity);
+
+                        const matchItem = document.createElement('li');
+                        matchItem.classList.add('match-item');
+                        matchItem.textContent = `Matched order - Buy Order: ${buyOrder.user} Quantity: ${matchedQuantity} Price: ${buyOrder.price} with Sell Order: ${sellOrder.user}`;
+                        matchesList.appendChild(matchItem);
+                    }
+                }
+            }
+
+            if (matchesList.children.length === 0) {
+                displayMessage('info', 'No matched orders found.');
+            }
+        }
+
+        function displayMessage(type, message) {
+            const errorMessageElement = document.getElementById('errorMessage');
+            errorMessageElement.textContent = message;
+
+            if (type === 'success') {
+                errorMessageElement.style.color = 'green';
+            } else if (type === 'error') {
+                errorMessageElement.style.color = 'red';
+            } else {
+                errorMessageElement.style.color = 'blue';
+            }
+        }
+    </script>
+</body>
+</html>
